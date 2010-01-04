@@ -1,0 +1,43 @@
+General Information
+===================
+
+thetime is a lightweight X app to show the current date and time. It
+was designed to work with minimal Window Managers like OpenBox,
+PekWM, FluxBox, etc. While being so leightweight it covers a few
+features like an easy configuration using the command-line or
+~/.Xdefaults, good looking fonts using Xft, pseudo-transparency.
+
+thetime is free software released under the GNU General Public
+License (GPL), see the file "COPYING" for details.
+
+Requirements
+============
+
+thetime requires Xlib [1], Xft [2] and of course a running X server.
+As its build requirements it also needs an ANSI C99 capable 
+compiler like GCC [3].
+
+  [1] http://www.x.org
+  [2] http://www.fontconfig.org
+  [3] http://gcc.gnu.org
+
+Installation
+============
+
+To install thetime you can use a prebuilt package for your
+distribution or you can use the GNU built systen.
+
+  $ ./configure
+  $ make
+  # make install
+
+For more information check INSTALL.
+
+Contribute
+==========
+
+You found a bug? You got a nice idea? Don't hesitate to get in touch
+with us:
+
+  http://code.reaktor42.de
+
