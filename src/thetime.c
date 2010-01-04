@@ -31,6 +31,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <X11/Xresource.h>
 #include <X11/Xft/Xft.h>
 
 /* general xlib vars */
@@ -55,7 +56,7 @@ static char *time_format = "%T";
 /* prototypes */
 static void sig_handler(int signal);
 static void cleanup();
-static void parse_cmdline(int argc, char *argv[]);
+static void get_settings(int argc, char *argv[]);
 static void update_time();
 static void draw_time();
 static void set_background();
@@ -87,8 +88,8 @@ int main(int argc, char *argv[])
     colormap = DefaultColormap(display, screen);
     root_window = DefaultRootWindow(display);
 
-    /* try to read the runtime settings from cmdline */
-    parse_cmdline(argc, argv);
+    /* try to get the runtime settings from cmdline and Xdefaults */
+    get_settings(argc, argv);
 
     /* create window and draw context */
     window = XCreateWindow(display, root_window, 0, 0, width, height, 0,
@@ -191,8 +192,23 @@ static void cleanup()
         _Exit(EXIT_FAILURE);
 }
 
-static void parse_cmdline(int argc, char *argv[])
+static void get_settings(int argc, char *argv[])
 {
+    char *font_name = "sans-9";
+    char *color_name = "white";
+    
+    char *value;
+    if ((value = XGetDefault(display, "thetime", "format")) != NULL)
+        time_format = value;
+    if ((value = XGetDefault(display, "thetime", "font")) != NULL)
+        font_name = value;
+    if ((value = XGetDefault(display, "thetime", "color")) != NULL)
+        color_name = value;
+    if ((value = XGetDefault(display, "thetime", "position")) != NULL)
+        sscanf(value, "%i,%i", &x, &y);
+    if ((value = XGetDefault(display, "thetime", "update")) != NULL)
+        update_interval = atoi(value);
+
     struct option options[] = {
         {"format", required_argument, NULL, 't'},
         {"font", required_argument, NULL, 'f'},
@@ -205,9 +221,6 @@ static void parse_cmdline(int argc, char *argv[])
 
     char c;
     int index = 0;
-
-    char *font_name = "sans-9";
-    char *color_name = "white";
 
     while ((c = getopt_long(argc, argv, "t:f:c:p:u:hv", options, &index)) != -1)
         switch (c) {
