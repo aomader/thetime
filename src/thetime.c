@@ -232,6 +232,8 @@ static void parse_cmdline(int argc, char *argv[])
             default:
                 printf("Usage: thetime [OPTIONS]\n\n"
                     "Options\n"
+                    "  -t, --format=FMT   The strftime(3) compatible time "
+                    "format\n"
                     "  -f, --font=FONT    The Xft aware font description\n"
                     "  -c, --color=COLOR  The font color\n"
                     "  -p, --position=X,Y Position of the window, negative "
