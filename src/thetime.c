@@ -300,13 +300,21 @@ static void draw_time()
 /* set the window background */
 static void set_background()
 {
-    Atom root_id = XInternAtom(display, "_XROOTPMAP_ID", False), type = None;
-    int format;
+    Atom root_id[2] = {
+        XInternAtom(display, "_XROOTPMAP_ID", False),
+        XInternAtom(display, "ESETROOT_PMAP_ID", False)
+    };
+    Atom type = None;
+    int format, result;
     unsigned long nitems, bytes_after;
     unsigned char *prop = NULL;
-
-    int result = XGetWindowProperty(display, root_window, root_id, 0, 1, False,
-        XA_PIXMAP, &type, &format, &nitems, &bytes_after, &prop);
+    
+    for (int i = 0; i < 2; ++i) {
+        result = XGetWindowProperty(display, root_window, root_id[i], 0, 1,
+            False, XA_PIXMAP, &type, &format, &nitems, &bytes_after, &prop);
+        if (result == Success && prop != NULL)
+            break;
+    }
 
     if (result != Success || prop == NULL) {
         fprintf(stderr, "Failed to detect background pixmap.\n");
