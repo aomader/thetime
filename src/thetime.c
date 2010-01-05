@@ -36,9 +36,8 @@
 
 /* general xlib vars */
 static Display *display = NULL;
-static int fd;
-static int screen;
-static Window root_window;
+static int display_width, display_height;
+static int fd, screen;
 static Window window = None;
 static Visual *visual;
 static Colormap colormap;
@@ -48,8 +47,10 @@ static XftColor color;
 
 /* runtime settings */
 static volatile sig_atomic_t running = 1;
-static int x = 20, y = 20, width = 10, height = 10;
+static int x = 20, y = 20;
+static int last_x = 0, last_y = 0, last_width = 0, last_height = 0;
 static int last_update = 0, need_update = 1, update_interval = 1;
+static int need_redraw = 0;
 static char time_string[56];
 static char *time_format = "%T";
 
@@ -59,7 +60,7 @@ static void cleanup();
 static void get_settings(int argc, char *argv[]);
 static void update_time();
 static void draw_time();
-static void set_background();
+static int rect_overlap(int x, int y, int width, int height);
 
 /* lets start here */
 int main(int argc, char *argv[])
@@ -86,67 +87,35 @@ int main(int argc, char *argv[])
     screen = DefaultScreen(display);
     visual = DefaultVisual(display, screen);
     colormap = DefaultColormap(display, screen);
-    root_window = DefaultRootWindow(display);
+    window = DefaultRootWindow(display);
+    display_width = DisplayWidth(display, screen);
+    display_height = DisplayHeight(display, screen);
+    draw = XftDrawCreate(display, window, visual, colormap);
 
     /* try to get the runtime settings from cmdline and Xdefaults */
     get_settings(argc, argv);
-
-    /* create window and draw context */
-  /*  window = XCreateWindow(display, root_window, 0, 0, width, height, 0,
-        CopyFromParent, InputOutput, CopyFromParent, 0, NULL);
-		*/
-    /* we need to force window position and size */
-  /*  XSetWindowAttributes attr = {.override_redirect = True};
-    XChangeWindowAttributes(display, window, CWOverrideRedirect, &attr);
-*/
-    /* set window hints */
-  /*  XWindowChanges values = {.stack_mode = Below};
-    XConfigureWindow(display, window, CWStackMode, &values);
-    long val = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
-    XChangeProperty(display, window, XInternAtom(display, "_NET_WM_WINDOW_TYPE",
-        False), XA_ATOM, 32, PropModeReplace, (unsigned char *) &val, 1);
-    val = 0xffffffff;
-    XChangeProperty(display, window, XInternAtom(display, "_NET_WM_DESKTOP",
-        False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &val, 1);
-    val = 0;
-    XChangeProperty(display, window, XInternAtom(display, "_WIN_LAYER",
-        False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &val, 1);
-    Atom state[4] = {
-        XInternAtom(display, "_NET_WM_STATE_SKIP_PAGER", False),
-        XInternAtom(display, "_NET_WM_STATE_SKIP_TASKBAR", False),
-        XInternAtom(display, "_NET_WM_STATE_SKIP_STICKY", False),
-        XInternAtom(display, "_NET_WM_STATE_SKIP_BELOW", False)
-    };
-    XChangeProperty(display, window, XInternAtom(display, "_NET_WM_STATE",
-        False), XA_ATOM, 32, PropModeReplace, (unsigned char *) state, 4);
-    long prop[5] = {2, 0, 0, 0, 0};
-    XChangeProperty(display, window, XInternAtom(display, "_MOTIF_WM_HINTS",
-        False), XInternAtom(display, "_MOTIF_WM_HINTS", False), 32,
-        PropModeReplace, (unsigned char *) prop, 5);
-*/
-    /* show the window with the current time */
- /*   update_time(); draw_time();
-    XMapWindow(display, window);
-*/
+    
     XEvent event;
     fd_set fds;
     struct timeval tv;
     int current_time;
-    window = RootWindow(display, screen);
 
-    draw = XftDrawCreate(display, window, visual, colormap);
+    update_time();
 
     XSelectInput(display, window, ExposureMask);
-	update_time(); draw_time();
     while (running == 1) {
         /* read all pending x events */
         while (XPending(display) > 0) {
             XNextEvent(display, &event);
-            if (event.type == Expose)
-                need_update = 1;
+            if (event.type == Expose &&
+                rect_overlap(event.xexpose.x, event.xexpose.y,
+                event.xexpose.width, event.xexpose.height))
+            {
+                need_redraw = 1;
+            }
         }
 
-        if (need_update == 1)
+        if (need_redraw == 1)
             draw_time();
 
         current_time = time(NULL);
@@ -182,8 +151,10 @@ static void cleanup()
     if (font != NULL)
         XftFontClose(display, font);
 
-  /*  if (window != None)
-        XDestroyWindow(display, window);*/
+    /* before we exit we need to clear the window */
+    XClearArea(display, window, last_x, last_y, last_width, last_height,
+        False);
+
     if (display != NULL)
         XCloseDisplay(display);
 
@@ -195,6 +166,7 @@ static void cleanup()
         _Exit(EXIT_FAILURE);
 }
 
+/* read settings from Xresources and cmd line */
 static void get_settings(int argc, char *argv[])
 {
     char *font_name = "sans-9";
@@ -277,82 +249,54 @@ static void update_time()
     }
 
     last_update = t;
-    need_update = 1;
+    need_redraw = need_update = 1;
 }
 
 /* just update the window and repaint the time string */
 static void draw_time()
 {
-    XGlyphInfo extents;
-    XftTextExtents8(display, font, (const FcChar8 *) time_string, strlen(
-        time_string), &extents);
+    int tmp_x = last_x, tmp_y = last_y;
+    int tmp_width = last_width, tmp_height = last_height;
 
-    int tmp_width = extents.xOff;
-    int tmp_height = font->descent + font->ascent;
+    if (need_update == 1) {
+        XGlyphInfo extents;
+        XftTextExtents8(display, font, (const FcChar8 *) time_string, strlen(
+            time_string), &extents);
 
-        int tmp_x = x, tmp_y = y;
-    if (width < tmp_width || height < tmp_height) {
-        width = tmp_width;
-        height = tmp_height;
-
-
-        if (x < 0)
-            tmp_x = DisplayWidth(display, screen) - abs(x) - width;
-        if (y < 0)
-            tmp_y = DisplayHeight(display, screen) - abs(y) - height;
-
-        /*XMoveResizeWindow(display, window, tmp_x, tmp_y, width, height);
-        set_background();*/
+        tmp_width = extents.xOff;
+        tmp_height = font->descent + font->ascent;
+        tmp_x = (x < 0) ? display_width - abs(x) - tmp_width : x;
+        tmp_y = ((y < 0) ? display_height - abs(y) - tmp_height : y) -
+            font->descent;
     }
-//printf ("%i %i %i %i\n", tmp_x, tmp_y, width, height);
-    XClearArea(display, window, tmp_x, tmp_y, width, height, False);
-    //XClearWindow(display, window);
-    XftDrawString8(draw, &color, font, tmp_x, tmp_y + (height - font->descent),
-        (const FcChar8 *)time_string, strlen(time_string));
+
+    XClearArea(display, window, last_x, last_y, last_width, last_height,
+        False);
+    XftDrawString8(draw, &color, font, tmp_x, tmp_y + tmp_height,
+        (const FcChar8 *) time_string, strlen(time_string));
     XFlush(display);
 
-    need_update = 0;
+    if (need_update == 1) {
+        last_width = tmp_width;
+        last_height = tmp_height;
+        last_x = tmp_x;
+        last_y = tmp_y;
+    }
+
+    need_redraw = need_update = 0;
 }
 
-/* set the window background */
-static void set_background()
+/* lets check if the expose rect overlaps the time string */
+static int rect_overlap(int x, int y, int width, int height)
 {
-    Atom root_id[2] = {
-        XInternAtom(display, "_XROOTPMAP_ID", False),
-        XInternAtom(display, "ESETROOT_PMAP_ID", False)
-    };
-    Atom type = None;
-    int format, result;
-    unsigned long nitems, bytes_after;
-    unsigned char *prop = NULL;
-    
-    for (int i = 0; i < 2; ++i) {
-        result = XGetWindowProperty(display, root_window, root_id[i], 0, 1,
-            False, XA_PIXMAP, &type, &format, &nitems, &bytes_after, &prop);
-        if (result == Success && prop != NULL)
-            break;
-    }
+    int a1_x = last_x, a2_x = last_x + last_width;
+    int a1_y = last_y, a2_y = last_y + last_height;
 
-    if (result != Success || prop == NULL) {
-        fprintf(stderr, "Failed to detect background pixmap.\n");
-        exit(EXIT_FAILURE);
-    }
+    int b1_x = x, b2_x = x + width;
+    int b1_y = y, b2_y = y + height;
 
-    Pixmap root_pixmap = *((Pixmap *) prop);
-    XFree(prop);
+    if (b1_x > a2_x || b2_x < a1_x || b1_y > a2_y || b2_y < a1_y)
+        return 0;
 
-    Window root, child;
-    int x, y;
-    unsigned width, height, border_width, depth;
-
-    XGetGeometry(display, window, &root, &x, &y, &width, &height,
-        &border_width, &depth);
-    XTranslateCoordinates(display, window, root_window, 0, 0, &x, &y, &child);
-
-    Pixmap background = XCreatePixmap(display, root_pixmap, width, height,
-        depth);
-    XCopyArea(display, root_pixmap, background, DefaultGC(display,
-        screen), x, y, width, height, 0, 0);
-    XSetWindowBackgroundPixmap(display, window, background);
+    return 1;
 }
-
