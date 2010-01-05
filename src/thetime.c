@@ -92,16 +92,15 @@ int main(int argc, char *argv[])
     get_settings(argc, argv);
 
     /* create window and draw context */
-    window = XCreateWindow(display, root_window, 0, 0, width, height, 0,
+  /*  window = XCreateWindow(display, root_window, 0, 0, width, height, 0,
         CopyFromParent, InputOutput, CopyFromParent, 0, NULL);
-    draw = XftDrawCreate(display, window, visual, colormap);
-
+		*/
     /* we need to force window position and size */
-    XSetWindowAttributes attr = {.override_redirect = True};
+  /*  XSetWindowAttributes attr = {.override_redirect = True};
     XChangeWindowAttributes(display, window, CWOverrideRedirect, &attr);
-
+*/
     /* set window hints */
-    XWindowChanges values = {.stack_mode = Below};
+  /*  XWindowChanges values = {.stack_mode = Below};
     XConfigureWindow(display, window, CWStackMode, &values);
     long val = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
     XChangeProperty(display, window, XInternAtom(display, "_NET_WM_WINDOW_TYPE",
@@ -124,17 +123,21 @@ int main(int argc, char *argv[])
     XChangeProperty(display, window, XInternAtom(display, "_MOTIF_WM_HINTS",
         False), XInternAtom(display, "_MOTIF_WM_HINTS", False), 32,
         PropModeReplace, (unsigned char *) prop, 5);
-
+*/
     /* show the window with the current time */
-    update_time(); draw_time();
-    XSelectInput(display, window, ExposureMask);
+ /*   update_time(); draw_time();
     XMapWindow(display, window);
-
+*/
     XEvent event;
     fd_set fds;
     struct timeval tv;
     int current_time;
+    window = RootWindow(display, screen);
 
+    draw = XftDrawCreate(display, window, visual, colormap);
+
+    XSelectInput(display, window, ExposureMask);
+	update_time(); draw_time();
     while (running == 1) {
         /* read all pending x events */
         while (XPending(display) > 0) {
@@ -179,8 +182,8 @@ static void cleanup()
     if (font != NULL)
         XftFontClose(display, font);
 
-    if (window != None)
-        XDestroyWindow(display, window);
+  /*  if (window != None)
+        XDestroyWindow(display, window);*/
     if (display != NULL)
         XCloseDisplay(display);
 
@@ -287,23 +290,24 @@ static void draw_time()
     int tmp_width = extents.xOff;
     int tmp_height = font->descent + font->ascent;
 
+        int tmp_x = x, tmp_y = y;
     if (width < tmp_width || height < tmp_height) {
         width = tmp_width;
         height = tmp_height;
 
-        int tmp_x = x, tmp_y = y;
 
         if (x < 0)
             tmp_x = DisplayWidth(display, screen) - abs(x) - width;
         if (y < 0)
             tmp_y = DisplayHeight(display, screen) - abs(y) - height;
 
-        XMoveResizeWindow(display, window, tmp_x, tmp_y, width, height);
-        set_background();
+        /*XMoveResizeWindow(display, window, tmp_x, tmp_y, width, height);
+        set_background();*/
     }
-
-    XClearWindow(display, window);
-    XftDrawString8(draw, &color, font, 0, height - font->descent,
+//printf ("%i %i %i %i\n", tmp_x, tmp_y, width, height);
+    XClearArea(display, window, tmp_x, tmp_y, width, height, False);
+    //XClearWindow(display, window);
+    XftDrawString8(draw, &color, font, tmp_x, tmp_y + (height - font->descent),
         (const FcChar8 *)time_string, strlen(time_string));
     XFlush(display);
 
