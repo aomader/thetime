@@ -1,6 +1,6 @@
 /**
  * thetime -- a tiny X app to show the current time
- * Copyright (C) 2009,1010  Oliver Mader <dotb52@gmail.com>
+ * Copyright (C) 2009,2010  Oliver Mader <dotb52@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -266,14 +266,13 @@ static void draw_time()
         tmp_width = extents.xOff;
         tmp_height = font->descent + font->ascent;
         tmp_x = (x < 0) ? display_width - abs(x) - tmp_width : x;
-        tmp_y = ((y < 0) ? display_height - abs(y) - tmp_height : y) -
-            font->descent;
+        tmp_y = (y < 0) ? display_height - abs(y) - tmp_height : y;
     }
 
     XClearArea(display, window, last_x, last_y, last_width, last_height,
         False);
-    XftDrawString8(draw, &color, font, tmp_x, tmp_y + tmp_height,
-        (const FcChar8 *) time_string, strlen(time_string));
+    XftDrawString8(draw, &color, font, tmp_x, tmp_y + tmp_height -
+        font->descent, (const FcChar8 *) time_string, strlen(time_string));
     XFlush(display);
 
     if (need_update == 1) {
