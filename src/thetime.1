@@ -1,0 +1,79 @@
+.TH thetime 1 01/07/2010 "thetime 0.1"
+.SH NAME
+.P
+.B thetime
+- a tiny X app to show the current date and time
+.SH SYNOPSIS
+.P
+.BI "thetime [" OPTIONS "]"
+.SH DESCRIPTION
+.P
+.B thetime
+draws the current date and time directly onto the root window while using
+.B Xft
+for good looking results.
+.P
+The behaviour and look of
+.B thetime
+can be configured either via command line options or via Xresrouces.
+As usual, command-line options have precedence over options that are specified
+in the Xresources.
+.SH OPTIONS
+.P
+All long-options (-- option) except
+.B help
+and
+.B version
+are also valid Xresources and can for example be defined in your
+.I $HOME/.Xdefaults
+file.
+.TP
+.BI \-t " FORMAT" "\fR,\fP \-\^\-format=" FORMAT
+Use
+.I FORMAT
+as the time format according to
+.BR strftime "(3)\fR."
+(Default: %T)
+.TP
+.BI \-f " FONT" "\fR,\fP \-\^\-font=" FONT
+Use
+.I FONT
+as an
+.B Xft
+valid font description. (Default: sans-9)
+.TP
+.BI \-c " COLOR" "\fR,\fP \-\^\-color=" COLOR
+Use
+.I COLOR
+as the text color which can be a name or a RGB hex value. (Default: white)
+.TP
+.BI \-p " X,Y" "\fR,\fP \-\^\-position=" X,Y
+The draw position specified in pixel. A negative value means start counting from the opposite direction. E.g. "-0,-0" would describe the lower right corner of the screen. (Default: 20,20)
+.TP
+.BI \-u " INTERVAL" "\fR,\fP \-\^\-update=" INTERVAL
+Update the time every 
+.I INTERVAL\fRs
+second. (Default: 1)
+.TP
+.B \-h\fR,\fP \-\^\-help
+Print a short usage description and exit.
+.TP
+.B \-v\fR,\fP \-\^\-version
+Print the installed version and exit.
+.SH BUGS
+.P
+Please email bug reports to
+.RB < dotb52@gmail.com >
+or visit
+.RB < http://github.com/b52/thetime/issues >
+and file an issue.
+.B 
+.SH SEE ALSO
+.P
+.BR strftime "(3)\fR,"
+.BR xft "(3)\fR,"
+.BR date "(1)\fR,"
+.BR xclock "(1)\fR."
+.SH AUTHOR
+.P
+Oliver Mader <dotb52@gmail.com>

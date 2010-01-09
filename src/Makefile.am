@@ -3,3 +3,4 @@ LIBS += @X11_LIBS@ @XFT_LIBS@
 
 bin_PROGRAMS = thetime
 thetime_SOURCES = thetime.c
+man_MANS = thetime.1
