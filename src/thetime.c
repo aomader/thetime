@@ -45,9 +45,11 @@ static XftFont *font;
 static XftDraw *draw;
 static XftColor color;
 
+enum {TOP, BOTTOM, LEFT, RIGHT};
+
 /* runtime settings */
 static volatile sig_atomic_t running = 1;
-static int x = 20, y = 20;
+static int x = 20, y = 20, x_orientation = LEFT, y_orientation = TOP;
 static int last_x = 0, last_y = 0, last_width = 0, last_height = 0;
 static int last_update = 0, need_update = 1, update_interval = 1;
 static int need_redraw = 0;
@@ -171,6 +173,7 @@ static void get_settings(int argc, char *argv[])
 {
     char *font_name = "sans-9";
     char *color_name = "white";
+    char *position = "20,20";
     
     char *value;
     if ((value = XGetDefault(display, "thetime", "format")) != NULL)
@@ -180,7 +183,7 @@ static void get_settings(int argc, char *argv[])
     if ((value = XGetDefault(display, "thetime", "color")) != NULL)
         color_name = value;
     if ((value = XGetDefault(display, "thetime", "position")) != NULL)
-        sscanf(value, "%i,%i", &x, &y);
+        position = value;
     if ((value = XGetDefault(display, "thetime", "update")) != NULL)
         update_interval = atoi(value);
 
@@ -209,7 +212,7 @@ static void get_settings(int argc, char *argv[])
                 color_name = optarg;
                 break;
             case 'p':
-                sscanf(optarg, "%i,%i", &x, &y);
+                position = optarg;
                 break;
             case 'u':
                 update_interval = atoi(optarg);
@@ -235,6 +238,13 @@ static void get_settings(int argc, char *argv[])
 
     font = XftFontOpenName(display, screen, font_name);
     XftColorAllocName(display, visual, colormap, color_name, &color);
+
+    sscanf(position, "%i,%i", &x, &y);
+
+    if (position[0] == '-')
+        x_orientation = RIGHT;
+    if (*(strchr(position, ',') + 1) == '-')
+        y_orientation = BOTTOM;
 }
 
 /* update the time string */
@@ -265,8 +275,10 @@ static void draw_time()
 
         tmp_width = extents.xOff;
         tmp_height = font->descent + font->ascent;
-        tmp_x = (x < 0) ? display_width - abs(x) - tmp_width : x;
-        tmp_y = (y < 0) ? display_height - abs(y) - tmp_height : y;
+        tmp_x = (x_orientation == RIGHT) ? display_width - abs(x) - tmp_width
+            : x;
+        tmp_y = (y_orientation == BOTTOM) ? display_height - abs(y) -
+            tmp_height : y;
     }
 
     XClearArea(display, window, last_x, last_y, last_width, last_height,
