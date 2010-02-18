@@ -1,11 +1,10 @@
 General Information
 ===================
 
-thetime is a lightweight X app to show the current date and time. It
-was designed to work with minimal Window Managers like OpenBox,
-PekWM, FluxBox, etc. While being so leightweight it covers a few
-features like an easy configuration using the command-line or
-~/.Xdefaults, good looking fonts using Xft, pseudo-transparency.
+thetime is a lightweight X app to draw the current date and time directly onto
+the root window while using Xft for good looking results.
+Its behaviour can easily be configured either via command line options or
+via Xresources.
 
 thetime is free software released under the GNU General Public
 License (GPL), see the file "COPYING" for details.
@@ -39,5 +38,5 @@ Contribute
 You found a bug? You got a nice idea? Don't hesitate to get in touch
 with us:
 
-  http://code.reaktor42.de
+  http://reaktor42.de
 

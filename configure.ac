@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([thetime], [0.1], [dotb52@gmail.com])
+AC_INIT([thetime], [0.2], [http://reaktor42.de])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AC_LANG([C])
