@@ -1,3 +1,10 @@
+thetime 0.2
+===========
+
+  * Fixed placement bug
+  * Fixed wrong clear behaviour
+  * Added a man page
+
 thetime 0.1
 ===========
 

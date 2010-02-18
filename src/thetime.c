@@ -200,7 +200,9 @@ static void get_settings(int argc, char *argv[])
     char c;
     int index = 0;
 
-    while ((c = getopt_long(argc, argv, "t:f:c:p:u:hv", options, &index)) != -1)
+    while ((c = getopt_long(argc, argv, "t:f:c:p:u:hv", options, &index))
+        != -1)
+    {
         switch (c) {
             case 't':
                 time_format = optarg;
@@ -223,18 +225,21 @@ static void get_settings(int argc, char *argv[])
             default:
                 printf("Usage: thetime [OPTIONS]\n\n"
                     "Options\n"
-                    "  -t, --format=FMT   The strftime(3) compatible time "
-                    "format\n"
-                    "  -f, --font=FONT    The Xft aware font description\n"
-                    "  -c, --color=COLOR  The font color\n"
-                    "  -p, --position=X,Y Position of the window, negative "
-                    "values are treated\n"
-                    "                     as starting from opposite\n"
-                    "  -u, --update=TIME  Update interval in seconds\n"
-                    "\n  -h, --help         Print out this help\n"
-                    "  -v, --version      Print the current version\n");
+                    "  -t, --format=FORMAT    The strftime(3) compatible "
+                    "time format\n"
+                    "  -f, --font=FONT        The Xft aware font "
+                    "description\n"
+                    "  -c, --color=COLOR      The font color\n"
+                    "  -p, --position=X,Y     Position of the window, "
+                    "negative values are treated\n"
+                    "                         as starting from opposite\n"
+                    "  -u, --update=INTERVAL  Update screen each INTERVAL"
+                    " seconds\n"
+                    "\n  -h, --help             Print out this help\n"
+                    "  -v, --version          Print the current version\n");
                 exit(EXIT_SUCCESS);
         }
+    }
 
     font = XftFontOpenName(display, screen, font_name);
     XftColorAllocName(display, visual, colormap, color_name, &color);
