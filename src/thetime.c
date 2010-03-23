@@ -288,7 +288,7 @@ static void draw_time()
 
     XClearArea(display, window, last_x, last_y, last_width, last_height,
         False);
-    XftDrawString8(draw, &color, font, tmp_x, tmp_y + tmp_height -
+    XftDrawStringUtf8(draw, &color, font, tmp_x, tmp_y + tmp_height -
         font->descent, (const FcChar8 *) time_string, strlen(time_string));
     XFlush(display);
 
