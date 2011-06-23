@@ -1,6 +1,6 @@
 /**
  * thetime -- a tiny X app to show the current time
- * Copyright (C) 2009,2010  Oliver Mader <dotb52@gmail.com>
+ * Copyright (C) 2009-2011  Oliver Mader <b52@reaktor42.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
