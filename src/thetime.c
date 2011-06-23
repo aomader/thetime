@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         tv.tv_sec = 0;
 
         /* do we need to update the time string or can we wait */
-        if (last_update + update_interval <= current_time)
+        if (last_update + update_interval <= current_time || current_time < last_update)
             update_time();
         else
             tv.tv_sec = update_interval - (current_time - last_update);
